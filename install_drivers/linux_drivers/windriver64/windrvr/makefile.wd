@@ -1,0 +1,46 @@
+# Jungo Confidential. Copyright (c) 2011 Jungo Ltd.  http://www.jungo.com
+# Template file for configure script
+
+CSRCS = linux_wrappers.c 
+OD = LINUX.5.4.120-1.fc25.qubes.x86_64.x86_64
+MODDIR = /lib/modules/5.4.120-1.fc25.qubes.x86_64/kernel/drivers/misc
+LINK_OBJ = windrvr_gcc_v3.a
+MODULE_NAME = windrvr6
+TARGET = LINUX.5.4.120-1.fc25.qubes.x86_64.x86_64/windrvr6.o
+CFLAGS = -c -O2 -Wall -D__KERNEL__ -DMODULE  -Wstrict-prototypes -Wno-trigraphs -fno-common 		-fomit-frame-pointer -pipe -mno-red-zone -mcmodel=kernel -fno-reorder-blocks 		-Wno-sign-compare -fno-strict-aliasing
+EXTRA_CFLAGS = -DLINUX -DWINDRIVER_KERNEL  -I/lib/modules/5.4.120-1.fc25.qubes.x86_64/source/include -I/home/user/.local/Xilinx/14.7/ISE_DS/common/bin/lin64/install_script/install_drivers/linux_drivers/windriver64/include -I/home/user/.local/Xilinx/14.7/ISE_DS/common/bin/lin64/install_script/install_drivers/linux_drivers/windriver64 
+LDFLAGS = 
+ROOT_DIR = /home/user/.local/Xilinx/14.7/ISE_DS/common/bin/lin64/install_script/install_drivers/linux_drivers/windriver64
+SHARED_OBJECT = libwdapi1031
+
+ifeq ($(DEBUG),1)
+	CFLAGS += -g -DDEBUG
+endif
+
+COBJS = $(patsubst %.c,$(OD)/%.o,$(CSRCS))
+
+all: $(OD) $(TARGET)
+
+$(OD):
+	-@ mkdir $@ 
+
+$(COBJS): $(OD)/%.o : %.c 
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c -o $@ $<
+
+$(TARGET): $(COBJS) $(LINK_OBJ)
+	$(LD) $(LDFLAGS) -r -o $@ $^
+
+__temp_link:
+	# __temp_link is not need for kernel <= 2.4
+
+modpost:
+	# modpost is not needed for kernel <= 2.4
+	
+	
+clean:
+	rm -rf core .*.cmd Module.symvers modules.order .tmp_versions $(OD)/*
+
+install: all
+	ln -sf $(ROOT_DIR)/lib/$(SHARED_OBJECT)_32.so /usr/lib/$(SHARED_OBJECT).so; ln -sf $(ROOT_DIR)/lib/$(SHARED_OBJECT).so /usr/lib64/$(SHARED_OBJECT).so
+	./setup_inst_dir $(ROOT_DIR) $(MODDIR) $(TARGET) no "change the permissions of /dev/windrvr6"
+
