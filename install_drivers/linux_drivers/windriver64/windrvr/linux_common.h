@@ -26,7 +26,7 @@
 #  error "This kernel is too old: not supported by this file"
 #endif
 #if LINUX_VERSION_CODE > VERSION_CODE(2,7,0) /* not > 2.6, by now */
-#  error "This kernel is too recent: not supported by this file"
+//#  error "This kernel is too recent: not supported by this file"
 #endif
 #if (LINUX_VERSION_CODE & 0xff00) == 1 /* not 2.1 */
 #  error "Please don't use linux-2.1, use 2.2 or 2.4 instead"
@@ -48,7 +48,7 @@
 #elif LINUX_VERSION_CODE < VERSION_CODE(2,7,0)
 #  define LINUX_26
 #else
-#error "unsupported linux kernel version"
+//#error "unsupported linux kernel version"
 #endif
 
 #if defined(LINUX_22) || defined(LINUX_24) || defined(LINUX_26)

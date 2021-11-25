@@ -90,7 +90,7 @@ int LINUX_unregister_ioctl32_conversion(unsigned int cmd);
 void LINUX_queue_task_bh_immediate(void *bh);
 void LINUX_schedule_task(void *bh);
 void LINUX_bh_free(void *bh);
-void *LINUX_bh_alloc(void (*routine)(void *), void *data);
+void *LINUX_bh_alloc(void (*routine)(struct work_struct *), void *data);
 int LINUX_request_irq(unsigned int irq, int is_shared, const char *device,
     void *ctx);
 void LINUX_free_irq(unsigned int irq, void *dev_id);
@@ -160,7 +160,7 @@ unsigned long LINUX_usecs_to_jiffies(unsigned long usecs);
 unsigned long LINUX_msecs_to_jiffies(unsigned long msecs);
 void LINUX_add_timer(struct timer_list *timer, unsigned long timeout_msecs);
 void LINUX_create_timer(struct timer_list **timer, 
-    void ( * timer_cb)(unsigned long), unsigned long ctx);
+    void ( * timer_cb)(struct timer_list *), unsigned long ctx);
 void LINUX_del_timer(struct timer_list *timer);
 void LINUX_destroy_timer(struct timer_list *timer);
 int LINUX_user_page_list_get(void *buf, unsigned long bytes, 

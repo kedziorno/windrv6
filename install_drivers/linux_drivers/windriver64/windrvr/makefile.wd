@@ -8,7 +8,7 @@ LINK_OBJ = windrvr_gcc_v3.a
 MODULE_NAME = windrvr6
 TARGET = LINUX.5.4.120-1.fc25.qubes.x86_64.x86_64/windrvr6.o
 CFLAGS = -c -O2 -Wall -D__KERNEL__ -DMODULE  -Wstrict-prototypes -Wno-trigraphs -fno-common 		-fomit-frame-pointer -pipe -mno-red-zone -mcmodel=kernel -fno-reorder-blocks 		-Wno-sign-compare -fno-strict-aliasing
-EXTRA_CFLAGS = -DLINUX -DWINDRIVER_KERNEL  -I/lib/modules/5.4.120-1.fc25.qubes.x86_64/source/include -I/home/user/.local/Xilinx/14.7/ISE_DS/common/bin/lin64/install_script/install_drivers/linux_drivers/windriver64/include -I/home/user/.local/Xilinx/14.7/ISE_DS/common/bin/lin64/install_script/install_drivers/linux_drivers/windriver64 
+EXTRA_CFLAGS = -DLINUX -DWINDRIVER_KERNEL  -DLINUX_USB_SUPPORT -I/lib/modules/5.4.120-1.fc25.qubes.x86_64/source/include -I/home/user/.local/Xilinx/14.7/ISE_DS/common/bin/lin64/install_script/install_drivers/linux_drivers/windriver64/include -I/home/user/.local/Xilinx/14.7/ISE_DS/common/bin/lin64/install_script/install_drivers/linux_drivers/windriver64 
 LDFLAGS = 
 ROOT_DIR = /home/user/.local/Xilinx/14.7/ISE_DS/common/bin/lin64/install_script/install_drivers/linux_drivers/windriver64
 SHARED_OBJECT = libwdapi1031

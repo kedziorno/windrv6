@@ -158,20 +158,20 @@ struct trans_ctx
 };
 
 
-#if defined(LINUX_26)
+//#if defined(LINUX_26)
     #define FILL_BULK_URB usb_fill_bulk_urb
     #define FILL_INT_URB usb_fill_int_urb
     #define FILL_CONTROL_URB  usb_fill_control_urb
     #define USB_ISO_ASAP URB_ISO_ASAP
-#else
-    #define URB_ASYNC_UNLINK USB_ASYNC_UNLINK
-#endif
+//#else
+//    #define URB_ASYNC_UNLINK USB_ASYNC_UNLINK
+//#endif
 
-#if defined(LINUX_26)
+//#if defined(LINUX_26)
     #define DESC(x) (&((x).desc))
-#else
-    #define DESC(x) (&x)
-#endif
+//#else
+//    #define DESC(x) (&x)
+//#endif
 
 static int issue_new_transfer(struct trans_ctx *tc);
 static int urb_build(struct urb *urb, struct usb_dev_info *dev, pipe_t *pipe,
@@ -278,9 +278,9 @@ static int calc_device_info_size(struct usb_device *udev)
         for (j=0; j<conf_desc->bNumInterfaces; j++)
         {
             struct usb_interface *interface = 
-#if !defined(LINUX_26)
-                &
-#endif
+//#if !defined(LINUX_26)
+//                &
+//#endif
                 udev->config[i].interface[j];
             for(k=0; k<interface->num_altsetting; k++)
             {
@@ -294,22 +294,22 @@ static int calc_device_info_size(struct usb_device *udev)
     return count;
 }
     
-#if defined(LINUX_26)
+//#if defined(LINUX_26)
 static int usb_generic_probe(struct usb_interface *interface, 
     const struct usb_device_id *id)
-#else
-static void *usb_generic_probe(struct usb_device *udev, unsigned int ifnum, 
-    const struct usb_device_id *id)
-#endif
+//#else
+//static void *usb_generic_probe(struct usb_device *udev, unsigned int ifnum, 
+//    const struct usb_device_id *id)
+//#endif
 {
     struct usb_dev_info *dev;
     u32 config_index, interface_index;
     int ret = 0;
-#if defined(LINUX_26)
+//#if defined(LINUX_26)
     struct usb_device *udev = interface_to_usbdev(interface);
-#else
-    struct usb_interface *interface = &udev->actconfig->interface[ifnum];
-#endif 
+//#else
+//    struct usb_interface *interface = udev->actconfig->interface[ifnum];
+//#endif 
 
     dev = kmalloc(sizeof(struct usb_dev_info), 
         in_interrupt() ? GFP_ATOMIC : GFP_KERNEL);
@@ -333,27 +333,27 @@ static void *usb_generic_probe(struct usb_device *udev, unsigned int ifnum,
         dev = NULL;
     }
 Exit:
-#if defined(LINUX_26)
+//#if defined(LINUX_26)
     usb_set_intfdata (interface, dev);
     return ret;
-#else
-    return dev;
-#endif
+//#else
+//    return dev;
+//#endif
 }
 
-#if defined(LINUX_26)
+//#if defined(LINUX_26)
 static void usb_generic_disconnect(struct usb_interface *interface)
-#else
-static void usb_generic_disconnect(struct usb_device *udev, void *ptr)
-#endif
+//#else
+//static void usb_generic_disconnect(struct usb_device *udev, void *ptr)
+//#endif
 {
     struct usb_dev_info *dev;
-#if defined(LINUX_26)
+//#if defined(LINUX_26)
     dev = usb_get_intfdata (interface);
     usb_set_intfdata (interface, NULL);
-#else
-    dev = (struct usb_dev_info *)ptr;
-#endif
+//#else
+//    dev = (struct usb_dev_info *)ptr;
+//#endif
     dev->device_connected = 0;
     g_cb.wd_device_detach(dev);
     kfree(dev);
@@ -413,8 +413,8 @@ DWORD WD_FUNC_NAME(OS_register_devices)(void **register_ctx,
     
     memset(id, 0, mt_alloc_size); 
     BZERO(*driver);
-    driver->probe = usb_generic_probe;
-    driver->disconnect = usb_generic_disconnect;
+    driver->probe = &usb_generic_probe;
+    driver->disconnect = &usb_generic_disconnect;
     sprintf(name, "%s_%d", g_cb.wd_get_driver_name(), name_id++);
     driver->name = name;
     driver->id_table = id;
@@ -690,9 +690,9 @@ DWORD WD_FUNC_NAME(OS_get_device_info)(HANDLE os_dev_h, void *buf,
             u8 interface_index;
             pInterface = &pConfig->pInterfaces[j];
             interface = 
-#if !defined(LINUX_26)
-                &
-#endif
+//#if !defined(LINUX_26)
+//                &
+//#endif
                 udev->config[i].interface[j];
             pInterface->dwNumAltSettings = interface->num_altsetting;
             pInterface->pAlternateSettings = 
@@ -879,13 +879,13 @@ static int urb_issue(struct urb_ctx *uctx)
 
     uctx->urb->context = uctx;
 
-#if defined(LINUX_26)
+//#if defined(LINUX_26)
     /* Since we may be called from within a completion routine
      * we need to use GFP_ATOMIC - see usb_submit_urb man page */
     rc = usb_submit_urb(uctx->urb, GFP_ATOMIC);
-#else
-    rc = usb_submit_urb(uctx->urb);
-#endif
+//#else
+//    rc = usb_submit_urb(uctx->urb);
+//#endif
 
 Exit:
     if (rc)
@@ -994,11 +994,11 @@ static int usb_submit_sync(struct usb_dev_info *dev,
 
     urb->context = &tc->urbs[0];
 
-#if defined(LINUX_26)
+//#if defined(LINUX_26)
     status = usb_submit_urb(urb, GFP_NOIO);
-#else
-    status = usb_submit_urb(urb);
-#endif
+//#else
+//    status = usb_submit_urb(urb);
+//#endif
     if (status) 
     {
         set_current_state(TASK_RUNNING);
@@ -1189,11 +1189,11 @@ static int uctx_get(pipe_t *pipe, DWORD bytes, struct urb_ctx *uctx)
             pipe->max_packet_size;
     }
 
-#if defined(LINUX_26)
+//#if defined(LINUX_26)
     uctx->urb = usb_alloc_urb(packets, GFP_KERNEL);
-#else
-    uctx->urb = usb_alloc_urb(packets);
-#endif
+//#else
+//    uctx->urb = usb_alloc_urb(packets);
+//#endif
     if (!uctx->urb)
         return -ENOMEM;
 
@@ -1533,8 +1533,8 @@ void WD_FUNC_NAME(wdusb_register_callbacks)(wdusb_callbacks_t *callbacks,
 
 int init_module(void) 
 {
-    printk("%s v%s loaded, built: %s %s\n", DRIVER_NAME, WD_VERSION_STR,
-        __DATE__, __TIME__);
+    //printk("%s v%s loaded, built: %s %s\n", DRIVER_NAME, WD_VERSION_STR,
+    //    __DATE__, __TIME__);
     return 0;
 }
 

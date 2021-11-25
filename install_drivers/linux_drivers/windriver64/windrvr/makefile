@@ -2,7 +2,7 @@
 # Template file for configure script
 
 MODULE_NAME=windrvr6
-LINUX_USB_SUPPORT=no
+LINUX_USB_SUPPORT=yes
 USE_KBUILD=yes
 SUFFIX=
 

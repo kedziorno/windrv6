@@ -78,7 +78,7 @@ else if test $LINUX_USB_SUPPORT = yes ; then
     else if test $VER_BASE = "2.6" -a $VER_SUBMINOR -ge 17; then
 	    echo "#include <linux/autoconf.h>" >> hello.c
     else
-	    echo "#include <linux/config.h>" >> hello.c
+	    echo "#include <generated/autoconf.h>" >> hello.c
     fi
     fi
     echo "#if defined(CONFIG_USB) || defined(CONFIG_USB_MODULE)" >> hello.c

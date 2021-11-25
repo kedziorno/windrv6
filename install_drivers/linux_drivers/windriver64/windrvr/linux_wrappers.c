@@ -45,9 +45,8 @@
 #endif
 #include <asm/mman.h>
 #include "linux_wrappers.h"
-#if defined(LINUX_26) && (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,13)) && \
-    defined(CONFIG_COMPAT) && !defined(IA64)
-        #include <linux/ioctl32.h>
+#if defined(LINUX_26) && (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,13)) && defined(CONFIG_COMPAT) && !defined(IA64)
+    #include <linux/ioctl32.h>
 #endif
 #if defined(UDEV_SUPPORT)
     #include <linux/devfs_fs_kernel.h>
@@ -68,6 +67,9 @@ REGISTER_FUNC_MOD kp_register_mod_func_t
 #else
 REGISTER_FUNC_MOD kp_register_mod_func_t wd_register_kp_module_func;
 #endif
+
+#define EXPORT_SYMTAB
+EXPORT_SYMBOL(sev_enable_key);
 
 #if defined(WINDRIVER_KERNEL) && (defined(LINUX_22_24_26))
     #define EXPORT_SYMTAB
@@ -99,31 +101,31 @@ REGISTER_FUNC_MOD kp_register_mod_func_t wd_register_kp_module_func;
     MODULE_DESCRIPTION("WinDriver v" WD_VERSION_STR " Jungo (C) 1999 - 2011");
 #endif
 
-#if defined(LINUX_22_24_26)
+//#if defined(LINUX_22_24_26)
     void generic_pci_remove(void *dev_h, int notify);
     int generic_pci_probe(void *dev_h, int notify);
-#else
-    #include <linux/bios32.h>
-#endif
+//#else
+//    #include <linux/bios32.h>
+//#endif
 
 #if defined(CONFIG_SWIOTLB) || defined(IA64)
     #define _CONFIG_SWIOTLB
 #endif
 
-#if defined(LINUX_24_26)
+//#if defined(LINUX_24_26)
     #define VM_PG_OFFSET(vma) (vma)->vm_pgoff
     #define VM_BYTE_OFFSET(vma) ((vma)->vm_pgoff << PAGE_SHIFT)
-#else
-    #define VM_PG_OFFSET(vma) (vma)->vm_offset 
-    #define VM_BYTE_OFFSET(vma) ((vma)->vm_offset << PAGE_SHIFT)
-#endif
+//#else
+//    #define VM_PG_OFFSET(vma) (vma)->vm_offset 
+//    #define VM_BYTE_OFFSET(vma) ((vma)->vm_offset << PAGE_SHIFT)
+//#endif
 
 #define PAGE_COUNT(buf,size) ((((unsigned long)buf + size + PAGE_SIZE - 1) \
      >> PAGE_SHIFT) - ((unsigned long)buf >> PAGE_SHIFT))
 
-#if defined(LINUX_24_26)
+//#if defined(LINUX_24_26)
     static struct pci_dev *pci_root_dev;
-#endif
+//#endif
 
 typedef struct 
 {
@@ -291,56 +293,56 @@ void LINUX_MOD_DEC_USE_COUNT(void)
 #endif
 }
 
-#if defined(LINUX_26)
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,24)
-struct page *windriver_vma_nopage(struct vm_area_struct *vma,
-    unsigned long address, int *type)
-#else 
-int windriver_vma_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
-#endif
-#elif defined(LINUX_24)
-struct page *windriver_vma_nopage(struct vm_area_struct *vma,
-    unsigned long address, int unused)
-#else
-unsigned long windriver_vma_nopage(struct vm_area_struct *vma,
-    unsigned long address, int unused) 
-#endif
+//#if defined(LINUX_26)
+//#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,24)
+//struct page *windriver_vma_nopage(struct vm_area_struct *vma,
+//    unsigned long address, int *type)
+//#else 
+vm_fault_t windriver_vma_fault(struct vm_fault *vmf)
+//#endif
+//#elif defined(LINUX_24)
+//struct page *windriver_vma_nopage(struct vm_area_struct *vma,
+//    unsigned long address, int unused)
+//#else
+//unsigned long windriver_vma_nopage(struct vm_area_struct *vma,
+//    unsigned long address, int unused) 
+//#endif
 {
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,24)
-    unsigned long off = address - vma->vm_start;
-#else 
-    unsigned long off = (unsigned long)vmf->virtual_address - vma->vm_start;
-#endif
-    unsigned long va = (unsigned long)vma->vm_private_data + off;
+//#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,24)
+//    unsigned long off = address - vma->vm_start;
+//#else 
+//    unsigned long off = (unsigned long)vmf->address - vma->vm_start;
+//#endif
+    unsigned long va = (unsigned long)vmf->vma->vm_private_data + vmf->pgoff;
     
-#if defined(LINUX_24_26)
+//#if defined(LINUX_24_26)
     struct page *page;
     
     page = virt_to_page(va);
     get_page(page); /* increment page count */
 
-    #if defined(LINUX_26) && LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,24)
-    if (type)
-        *type = VM_FAULT_MINOR;
-    #endif
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,24)
-    return page; 
-#else
+//    #if defined(LINUX_26) && LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,24)
+//    if (type)
+//        *type = VM_FAULT_MINOR;
+//    #endif
+//#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,24)
+//    return page; 
+//#else
     vmf->page = page;
     return 0;
-#endif
-#else
-    atomic_inc(&mem_map[MAP_NR(__pa(va))].count);
-    return __pa(va);
-#endif
+//#endif
+//#else
+//    atomic_inc(&mem_map[MAP_NR(__pa(va))].count);
+//    return __pa(va);
+//#endif
 }
 
 struct vm_operations_struct windriver_vm_ops = {
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,24)
-    nopage: windriver_vma_nopage,
-#else
+//#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,24)
+//    nopage: windriver_vma_nopage,
+//#else
     fault: windriver_vma_fault,
-#endif
+//#endif
 };
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,9)
@@ -424,7 +426,7 @@ static int wd_mmap(
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2,4,14)
     vma->vm_flags |= VM_SHM | VM_LOCKED; /* don't swap out */
 #else
-    vma->vm_flags |= VM_RESERVED; /* don't swap out */
+    vma->vm_flags |= VM_DONTEXPAND | VM_DONTDUMP; /* don't swap out */
 #endif
 
     if (file->private_data)
@@ -442,7 +444,7 @@ static int wd_mmap(
             vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
 
         if (REMAP_PAGE_RANGE(
-            REMAP_ARG(vma) vma->vm_start, REMAP_OFFSET(vma), vma->vm_end - vma->vm_start, vma->vm_page_prot))
+            vma,REMAP_ARG(vma) vma->vm_start, REMAP_OFFSET(vma), vma->vm_end - vma->vm_start, vma->vm_page_prot))
         {
             return -EAGAIN;
         }
@@ -463,15 +465,15 @@ static int wd_mmap(
     #endif
 
     #if defined(CONFIG_COMPAT) && !defined(IA64)
-        #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,13)
-            static int LINUX_ioctl_compat(unsigned int fd, unsigned int cmd,
-                unsigned long arg, struct file *filep) 
-        #else
+        //#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,13)
+        //    static int LINUX_ioctl_compat(unsigned int fd, unsigned int cmd,
+        //        unsigned long arg, struct file *filep) 
+        //#else
             static long LINUX_ioctl_compat(struct file *filep, unsigned int cmd,
                 unsigned long arg)
-        #endif
+        //#endif
             {
-                struct inode *inode = filep->f_dentry->d_inode;
+                struct inode *inode = filep->f_inode;
                 return wd_linux_ioctl_compat(inode, filep, cmd, arg);
             }
     #endif
@@ -485,11 +487,11 @@ static int wd_mmap(
     int LINUX_register_ioctl32_conversion(unsigned int cmd)
     {
     #if defined(CONFIG_COMPAT) && !defined(IA64)
-        #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,13)
-            return register_ioctl32_conversion(cmd, LINUX_ioctl_compat);
-        #else
+        //#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,13)
+        //    return register_ioctl32_conversion(cmd, LINUX_ioctl_compat);
+        //#else
             return 0;
-        #endif
+        //#endif
     #else
         return -EINVAL;
     #endif
@@ -498,11 +500,11 @@ static int wd_mmap(
     int LINUX_unregister_ioctl32_conversion(unsigned int cmd)
     {
     #if defined(CONFIG_COMPAT) && !defined(IA64)
-        #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,13)
-            return unregister_ioctl32_conversion(cmd);
-        #else
+        //#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,13)
+        //    return unregister_ioctl32_conversion(cmd);
+        //#else
             return 0;
-        #endif
+        //#endif
     #else
         return -EINVAL;
     #endif
@@ -512,11 +514,11 @@ static int wd_mmap(
         static long LINUX_unlocked_ioctl(struct file *filp, unsigned int cmd, 
             unsigned long args)
         {
-            struct inode *inode = filp->f_dentry->d_inode;
+            struct inode *inode = filp->f_inode;
             
-            lock_kernel();
-            return WDlinuxIoctl(inode, filp, cmd, args);
-            unlock_kernel();
+            //lock_kernel();
+            return compat_ptr_ioctl(filp, cmd, args);
+            //unlock_kernel();
         }
     #endif
 
@@ -525,17 +527,17 @@ static int wd_mmap(
             owner: THIS_MODULE,
         #endif
         #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36)
-        ioctl: WDlinuxIoctl,
+        ioctl: ksys_ioctl,
         #else
         unlocked_ioctl: LINUX_unlocked_ioctl,
         #endif
         mmap: wd_mmap,
         open: WDlinuxOpen,
-        #if defined(LINUX_22_24_26)
+        //#if defined(LINUX_22_24_26)
             release: WDlinuxClose,
-        #else
-            release: WDlinuxClose_20,
-        #endif
+        //#else
+        //    release: WDlinuxClose_20,
+        //#endif
         #if defined(CONFIG_COMPAT) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,13))
             compat_ioctl: LINUX_ioctl_compat,
         #endif
@@ -695,24 +697,25 @@ void LINUX_bh_free(void *bh)
 
 #else
 
-void *LINUX_bh_alloc(void (*routine)(void *), void *data)
+void *LINUX_bh_alloc(void (*routine)(struct work_struct *), void *data)
 {
-#if defined(LINUX_26)
+//#if defined(LINUX_26)
     struct work_struct *bh = (struct work_struct*) vmalloc(sizeof(*bh));
-#else
-    struct tq_struct *bh = (struct tq_struct *) vmalloc(sizeof(*bh));
-#endif
+//#else
+//    struct tq_struct *bh = (struct tq_struct *) vmalloc(sizeof(*bh));
+//#endif
     if (!bh)
         return NULL;
     memset(bh, 0, sizeof(*bh));
-    bh->data = data;
-#if defined(LINUX_26)
+    atomic_long_t *d = (atomic_long_t*)&data;
+    bh->data = *d; //bh->data = ((atomic_long_t*)&data)->counter;
+//#if defined(LINUX_26)
     bh->func = routine;
     bh->entry.next = &bh->entry;
     bh->entry.prev = &bh->entry;
-#else
-    bh->routine = routine;
-#endif
+//#else
+//    bh->routine = routine;
+//#endif
     return (void *)bh;
 }
 
@@ -737,37 +740,37 @@ void LINUX_flush_scheduled_tasks(void)
 
 void LINUX_schedule_task(void *bh)
 {
-#if defined(LINUX_26)
+//#if defined(LINUX_26)
     schedule_work(bh);
-#elif defined(LINUX_24)
-    schedule_task(bh);
-#else
-    queue_task(bh, &tq_scheduler);
-#endif
+//#elif defined(LINUX_24)
+//    schedule_task(bh);
+//#else
+//    queue_task(bh, &tq_scheduler);
+//#endif
 }
 
 #if defined(WINDRIVER_KERNEL)
 
 extern int wd_intr_handler_linux(void *context);
 
-#if defined(LINUX_26)
+//#if defined(LINUX_26)
 irqreturn_t
-#else
-void
-#endif
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22)
-wrapper_handler(int irq, void *ctx, struct pt_regs *pt)
-#else
+//#else
+//void
+//#endif
+//#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22)
+//wrapper_handler(int irq, void *ctx, struct pt_regs *pt)
+//#else
 wrapper_handler(int irq, void *ctx)
-#endif
+//#endif
 {
-#if defined(LINUX_26)
+//#if defined(LINUX_26)
     int rc =
-#endif
+//#endif
         wd_intr_handler_linux(ctx);
-#if defined(LINUX_26)
+//#if defined(LINUX_26)
     return rc;
-#endif
+//#endif
 }
 
 int LINUX_request_irq(unsigned int irq, int is_shared, const char *device,
@@ -777,13 +780,13 @@ int LINUX_request_irq(unsigned int irq, int is_shared, const char *device,
     unsigned long flag_shared;
     unsigned long flags;
         
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22)
-    flag_disabled = SA_INTERRUPT;
-    flag_shared = SA_SHIRQ;
-#else
-    flag_disabled = IRQF_DISABLED;
+//#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22)
+//    flag_disabled = SA_INTERRUPT;
+//    flag_shared = SA_SHIRQ;
+//#else
+    flag_disabled = IRQF_ONESHOT; //IRQF_DISABLED;
     flag_shared = IRQF_SHARED;
-#endif
+//#endif
     flags = flag_disabled;
     if (is_shared)
         flags |= flag_shared;
@@ -831,7 +834,9 @@ void LINUX_pci_disable_msi(void *pdev)
         spinlock_t lock;         
     } msix_vectors_list_t;
 
-    static msix_vectors_list_t msix_vectors_list = {NULL, SPIN_LOCK_UNLOCKED};
+//    static msix_vectors_list_t msix_vectors_list = {NULL, SPIN_LOCK_UNLOCKED};
+    DEFINE_SPINLOCK(lock);
+    static msix_vectors_list_t msix_vectors_list = {NULL, NULL};
 #endif
 
 int LINUX_request_irq_msix(void *pdev, int is_shared, const char *device,
@@ -893,7 +898,7 @@ int LINUX_pci_enable_msix(void *pdev, int num_entries)
     for (i = 0; i < num_entries; i++)
         entries[i].entry = i;
 
-    rc = pci_enable_msix((struct pci_dev *)pdev, entries, num_entries);
+    rc = pci_enable_msix_exact((struct pci_dev *)pdev, entries, num_entries);
     if (rc)
     {
         printk("%s: failed %d\n", __FUNCTION__, rc);
@@ -941,11 +946,11 @@ void LINUX_pci_disable_msix(void *pdev)
 
 unsigned long LINUX_ioremap (unsigned long phys_addr, unsigned long size)
 {
-#if defined(LINUX_22_24_26)
+//#if defined(LINUX_22_24_26)
     return (unsigned long)ioremap_nocache(phys_addr, size);
-#else
-    return (unsigned long)vremap(phys_addr, size);
-#endif
+//#else
+//    return (unsigned long)vremap(phys_addr, size);
+//#endif
 }
 
 void LINUX_iounmap(unsigned long addr)
@@ -955,11 +960,11 @@ void LINUX_iounmap(unsigned long addr)
         return;
 #endif
     
-#if defined(LINUX_22_24_26)
+//#if defined(LINUX_22_24_26)
     iounmap((void *)addr);
-#else
-    vfree((void *)addr);
-#endif
+//#else
+//    vfree((void *)addr);
+//#endif
 }
 
 unsigned long LINUX_do_mmap(struct file *file, 
@@ -974,7 +979,7 @@ unsigned long LINUX_do_mmap(struct file *file,
 #endif    
     /* when kernel address is not zero, this is a mapping of DMA buffer */
     file->private_data = kernel_addr;
-    addr = do_mmap(file, 0, len, PROT_READ | PROT_WRITE, MAP_SHARED, phys_addr);
+    addr = do_mmap(file, 0, len, PROT_READ | PROT_WRITE, VM_SHARED, 0, phys_addr, NULL, NULL);
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2,4,2)
     up(&current->mm->mmap_sem);
 #else
@@ -986,13 +991,13 @@ unsigned long LINUX_do_mmap(struct file *file,
 int LINUX_do_munmap(unsigned long addr, unsigned int len)
 {
     return do_munmap(
-#if defined(LINUX_24_26)           
+//#if defined(LINUX_24_26)           
         current->mm,
-#endif
+//#endif
         addr, (size_t) len
-#if defined(DO_MUNMAP_API_CHANGE)
+//#if defined(DO_MUNMAP_API_CHANGE)
         , 0
-#endif
+//#endif
         );
 }
 
@@ -1033,79 +1038,79 @@ int LINUX_pcibios_present(void)
 int LINUX_pcibios_read_config_byte (unsigned char bus, unsigned char dev_fn,
     unsigned int where, unsigned char *val)
 {
-#if defined(LINUX_24_26)
+//#if defined(LINUX_24_26)
     GET_CUR_DEV(bus, dev_fn);
     rc = pci_read_config_byte(dev, where, val);
     UNGET_CUR_DEV;
     return rc;
-#else
-    return pcibios_read_config_byte(bus, dev_fn, (unsigned char)where, val); 
-#endif
+//#else
+//    return pcibios_read_config_byte(bus, dev_fn, (unsigned char)where, val); 
+//#endif
 }
 
 int LINUX_pcibios_read_config_word (unsigned char bus, unsigned char dev_fn,
     unsigned int where, unsigned short *val)
 {
-#if defined(LINUX_24_26)
+//#if defined(LINUX_24_26)
     GET_CUR_DEV(bus, dev_fn);
     rc = pci_read_config_word(dev, where, val);
     UNGET_CUR_DEV;
     return rc;
-#else
-    return pcibios_read_config_word(bus, dev_fn, (unsigned char)where, val);
-#endif
+//#else
+//    return pcibios_read_config_word(bus, dev_fn, (unsigned char)where, val);
+//#endif
 }
 
 int LINUX_pcibios_read_config_dword (unsigned char bus, unsigned char dev_fn,
     unsigned int where, unsigned int *val)
 {
-#if defined(LINUX_24_26)
+//#if defined(LINUX_24_26)
     GET_CUR_DEV(bus, dev_fn);
     rc = pci_read_config_dword(dev, where, val);
     UNGET_CUR_DEV;
     return rc;
-#else
-    return pcibios_read_config_dword(bus, dev_fn, (unsigned char)where, val);
-#endif
+//#else
+//    return pcibios_read_config_dword(bus, dev_fn, (unsigned char)where, val);
+//#endif
 }
 
 int LINUX_pcibios_write_config_byte (unsigned char bus, unsigned char dev_fn,
     unsigned int where, unsigned char val)
 {
-#if defined(LINUX_24_26)
+//#if defined(LINUX_24_26)
     GET_CUR_DEV(bus, dev_fn);
     rc = pci_write_config_byte(dev, where, val);
     UNGET_CUR_DEV;
     return rc;
-#else
-    return pcibios_write_config_byte(bus, dev_fn, (unsigned char)where, val);
-#endif
+//#else
+//    return pcibios_write_config_byte(bus, dev_fn, (unsigned char)where, val);
+//#endif
 }
 
 int LINUX_pcibios_write_config_word (unsigned char bus, unsigned char dev_fn,
     unsigned int where, unsigned short val)
 {
-#if defined(LINUX_24_26)
+//#if defined(LINUX_24_26)
     GET_CUR_DEV(bus, dev_fn);
     rc = pci_write_config_word(dev, where, val);
     UNGET_CUR_DEV;
     return rc;
-#else
-    return pcibios_write_config_word(bus, dev_fn, (unsigned char)where, val);
-#endif
+//#else
+//    return pcibios_write_config_word(bus, dev_fn, (unsigned char)where, val);
+//#endif
 }
 
 int LINUX_pcibios_write_config_dword (unsigned char bus, unsigned char dev_fn,
     unsigned int where, unsigned int val)
 {
-#if defined(LINUX_24_26)
+//#if defined(LINUX_24_26)
     GET_CUR_DEV(bus, dev_fn);
     rc = pci_write_config_dword(dev, where, val);
     UNGET_CUR_DEV;
     return rc;
-#else
-    return pcibios_write_config_dword(bus, dev_fn, (unsigned char)where, val);
-#endif
+//#else
+//    return pcibios_write_config_dword(bus, dev_fn, (unsigned char)where, val);
+//#endif
 }
 
 int LINUX_mmconfig_enabled(void)
@@ -1328,10 +1333,12 @@ unsigned long LINUX_jiffies()
     return jiffies;
 }
 
+#include <linux/time.h>
+
 long LINUX_get_time_in_sec()
 {
-    struct timeval tv;
-    do_gettimeofday(&tv);
+    struct timespec tv;
+    getnstimeofday(&tv);
     return tv.tv_sec;
 }
 
@@ -1559,16 +1566,16 @@ unsigned long LINUX_msecs_to_jiffies(unsigned long msecs)
 void LINUX_add_timer(struct timer_list *timer, unsigned long timeout_msecs)
 {
     timer->expires = jiffies + LINUX_msecs_to_jiffies(timeout_msecs);
+    init_timers();
+    run_local_timers();
     add_timer(timer);
 }
 
 void LINUX_create_timer(struct timer_list **timer, 
-    void (*timer_cb)(unsigned long), unsigned long ctx)
+    void (*timer_cb)(struct timer_list *), unsigned long ctx)
 {
     *timer = vmalloc(sizeof(struct timer_list));
-    init_timer(*timer);
-    (*timer)->function = timer_cb;
-    (*timer)->data = ctx;
+    timer_setup(*timer,timer_cb,ctx);
 }
 
 void LINUX_del_timer(struct timer_list *timer)
@@ -1644,11 +1651,7 @@ int LINUX_user_page_list_get(void *buf, unsigned long bytes, void **pl_h)
 
     down_read(&current->mm->mmap_sem);
     
-    res = get_user_pages(current, current->mm, (unsigned long)buf, page_count,
-        1, /* read/write permission */
-        1, /* force: only require the 'MAY' flag, e.g. allow "write" even to readonly page */
-        pages,
-        NULL);
+    res = get_user_pages((unsigned long)buf, page_count, 1, pages, NULL);
 
     up_read(&current->mm->mmap_sem);
 
@@ -1701,7 +1704,7 @@ static void page_release_cb(struct page *page)
 {
     if (!PageReserved(page))
         SetPageDirty(page);
-    page_cache_release(page);
+    delete_from_page_cache(page);
 }
 
 void LINUX_user_page_list_put(void *pl_h)
@@ -1745,7 +1748,7 @@ static void *LINUX_page_addr_get(struct page *page, LINUX_page_addr_param *param
             return NULL;
 
         local_irq_save(param->flags);        
-        param->map = (void *)(kmap_atomic(page, KM_IRQ0));
+        param->map = (void *)(kmap_atomic(page));
         if (!param->map)
         {
             printk("%s: error, page_buf is NULL\n", __FUNCTION__);
@@ -1767,7 +1770,7 @@ void LINUX_page_addr_put(LINUX_page_addr_param *param)
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2,4,20)
     return;
 #else
-    kunmap_atomic(param->map, KM_IRQ0);
+    kunmap_atomic(param->map);
     local_irq_restore(param->flags);
 #endif
 }
@@ -2391,7 +2394,7 @@ void *LINUX_pci_find_slot(unsigned int bus, unsigned int devfn)
      * to get all the pci devices. */
     return LINUX_pci_get_bus_and_slot(bus, devfn);
     #else
-    return pci_get_bus_and_slot(bus, devfn);
+    return LINUX_pci_get_bus_and_slot(bus, devfn);
     #endif
 #endif
 }
